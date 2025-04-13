@@ -10,6 +10,7 @@
 \usepackage{graphicx}
 \usepackage{fancyhdr}
 \usepackage[spanish]{babel}
+\usepackage{float} % Added for [H] specifier to force figure placement
 
 % Set margins
 \geometry{a4paper, margin=1in}
@@ -121,42 +122,42 @@ La simulación se implementó utilizando un enfoque de simulación por eventos d
 La simulación proporcionó las siguientes métricas promedio:
 \begin{itemize}
     \item Tamaño promedio de la cola en el contestador es de 0 llamadas.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{Answ_queue.png}
         \caption{Tamaño de la cola del contestador}
         \label{fig: Tamaño de la cola del contestador}
     \end{figure}
     \item Tamaño promedio de la cola en las reclamaciones es entre 0 y 1 llamada.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{claim_queue.png}
         \caption{Tamaño de la cola de reclamación}
-        \label{fig:Tamaño de la cola de reclamación}
+        \label{fig: Tamaño de la cola de reclamación}
     \end{figure}
     \item Tamaño promedio de la cola en información es entre 0 y 1 llamada.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{info_queue.png}
-        \caption{Tamaño de la cola de infromación}
-        \label{fig: Tamaño de la cola de infromación}
+        \caption{Tamaño de la cola de información}
+        \label{fig: Tamaño de la cola de información}
     \end{figure}
     \item Los tiempos de espera en minutos del contestador, reclamaciones e información son de 0.25, 2.27 y 13.20 respectivamente.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{queue_times.png}
         \caption{Tiempo en cada cola}
         \label{fig: Tiempo en cada cola}
     \end{figure}
     \item Los servidores de reclamación reciben entre 130 y 180 llamadas aproximadamente con un total entre los tres de 464 llamadas, mientras que los servidores de información reciben entre 50 y 80 llamadas con un total de 407.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{server_calls.png}
         \caption{Llamadas recibidas en cada servidor}
         \label{fig: Llamadas recibidas en cada servidor}
     \end{figure}
     \item Los servidores de reclamación se mantienen ocupados un promedio de 65.30\% de tiempo variando cada uno entre el 50\% y 80\%. En el caso de información, aunque reciban menos llamadas, el tiempo promedio ocupado es mayor que el de reclamaciones: 79.91\% distribuidos entre un 60\% y 80\% por servidor.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{server_utilization.png}
         \caption{Porcentaje de tiempo total que ocupa cada servidor}
@@ -169,14 +170,14 @@ La simulación proporcionó las siguientes métricas promedio:
         \item Reclamación a información: 9
         \item Información a reclamaciones: 4
     \end{itemize}
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{trajectories.png}
         \caption{Cantidad de llamadas por trayectoria}
         \label{fig: Cantidad de llamadas por trayectoria}
     \end{figure}
     \item El tiempo promedio que pasa un cliente en el sistema es de 21.15 minutos.
-    \begin{figure}[h]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{time.png}
         \caption{Tiempo en el sistema de cada llamada}
@@ -216,12 +217,27 @@ Para validar las hipótesis, se realizaron experimentos adicionales:
 \end{itemize}
 
 \subsection{Análisis estadístico}
-Se analizaron las variables de interés mediante:
+Las variables de interés ---tamaño promedio de las colas en cada nodo (contestador, reclamaciones, información), tiempo medio que un cliente pasa en el sistema, tiempos de espera en cola por nodo, utilización de los servidores y distribución de las trayectorias de los clientes--- son esenciales para evaluar el desempeño de la centralita telefónica y proponer mejoras. Realizar un análisis estadístico de estas variables es crucial por las siguientes razones:
+
 \begin{itemize}
-    \item Promedios ponderados por tiempo para las longitudes de cola, asegurando precisión en sistemas dinámicos.
-    \item Histogramas para observar la distribución de las colas (contestador y reclamaciones con colas cercanas a 0; información con colas de hasta 5 en picos).
-    \item Diagramas de caja para tiempos de espera, mostrando alta variabilidad en información (desviación estándar de 210 segundos).
-    \item Intervalos de confianza (95\%) para el tiempo en el sistema, calculados tras 10 ejecuciones: [1250.34, 1318.78] segundos.
+    \item \textbf{Variabilidad inherente del sistema}: Las llegadas de llamadas (Poisson, $\lambda = 35$/hora) y los tiempos de servicio (exponenciales: 30 segundos en contestador, 6 minutos en reclamaciones, 20 minutos en información) introducen alta variabilidad. Por ejemplo, el tiempo de espera en información (13.20 minutos en la simulación) puede fluctuar significativamente entre corridas debido a picos aleatorios de demanda o duraciones prolongadas de servicio, lo que afecta la fiabilidad de una estimación basada en una sola corrida.
+    
+    \item \textbf{Precisión de las estimaciones}: Una simulación de 24 horas ($\sim$840 llamadas) proporciona una muestra finita ($\sim$464 en reclamaciones, $\sim$407 en información), insuficiente para garantizar que métricas como la longitud de cola en información (0.57 simulada vs. 0.6 teórica) o el tiempo en el sistema (20.85 minutos simulados vs. 14.98 teóricos) representen el comportamiento a largo plazo. Un análisis estadístico con múltiples corridas permitiría calcular promedios robustos y evaluar la dispersión de estas métricas.
+    
+    \item \textbf{Eventos raros (redirecciones)}: Las redirecciones entre nodos (2\% de reclamaciones a información, 1\% de información a reclamaciones) son poco frecuentes ($\sim$9 y $\sim$4 casos en 24 horas, respectivamente). Esta baja incidencia ($\sim$0.0105 y $\sim$0.0047 de las trayectorias) requiere más observaciones para estimar con precisión su impacto en el tiempo total en el sistema y las colas, justificando un análisis estadístico para capturar su distribución real.
+    
+    \item \textbf{Variables específicas}:
+    \begin{itemize}
+        \item \textit{Tamaño promedio de colas}: Las colas pequeñas en el contestador (0.15) y reclamaciones (0.64) contrastan con información (0.57), pero picos ocasionales (hasta 5 en información) sugieren variabilidad. Un análisis estadístico cuantificaría si estas estimaciones son estables o si reflejan fluctuaciones temporales, ayudando a identificar cuellos de botella.
+        
+        \item \textit{Tiempo medio en el sistema}: Los 20.85 minutos simulados (vs. 14.98 teóricos) están influenciados por información (13.20 minutos de espera). La discrepancia requiere intervalos de confianza para determinar si es un efecto estructural o aleatorio, crítico para evaluar la experiencia del cliente.
+        
+        \item \textit{Tiempos de espera en cola}: La alta variabilidad en información (desviación estándar $\sim$210 segundos) frente a reclamaciones (2.27 minutos) y contestador (15 segundos) indica que una sola corrida no captura el rango completo. Un análisis estadístico confirmaría si los 13.20 minutos en información son típicos o excepcionales.
+        
+        \item \textit{Utilización de servidores}: La dispersión en reclamaciones (50\%--80\%, promedio 65.30\%) y la alta utilización en información (60\%--80\%, promedio 79.91\%) sugieren posibles ineficiencias. Un análisis estadístico evaluaría si estas diferencias entre servidores son consistentes, guiando decisiones sobre asignación de recursos.
+        
+        \item \textit{Distribución de trayectorias}: Las proporciones simuladas (52.56\% solo reclamaciones, 45.92\% solo información) se acercan a las esperadas (55\%, 45\%), pero las trayectorias con redirecciones ($\sim$1.52\% combinadas) son raras. Múltiples corridas asegurarían que estas tasas reflejan las probabilidades teóricas (2\%, 1\%).
+    \end{itemize}
 \end{itemize}
 
 \subsection{Análisis de parada}
@@ -250,7 +266,7 @@ Se asumen distribuciones exponenciales para llegadas y servicios, con capacidad 
 \end{itemize}
 
 \subsubsection{Tasas de llegada efectivas (considerando redirecciones):}
-Ecuaciones geefde balance de flujo:
+Ecuaciones de balance de flujo:
 \begin{align*}
     \lambda_c &= 0.55 \cdot 35 + 0.01 \cdot \lambda_i \\
     \lambda_i &= 0.45 \cdot 35 + 0.02 \cdot \lambda_c
